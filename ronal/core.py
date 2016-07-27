@@ -69,14 +69,4 @@ class Handler(object):
 
         last_production_date = self.get_last_dataset_production_date(stage)
 
-    def route_to_test_stage(self, files):
-        """
-        send the new data to test stage
-        """
-        last_production_date = self.get_last_dataset_production_date()
-
-    def route_to_production_stage(self, files):
-        """
-        send the new data to production
-        """
-        pass
+        # TODO :)
