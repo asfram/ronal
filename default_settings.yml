@@ -1,0 +1,10 @@
+input_dir: .input
+stage:
+  testing:
+    name: sim
+    fusio: ftp://bob
+    navitia: https://test.api.navitia.io
+  production:
+    name: prod
+    fusio: ftp://bobette
+    navitia: https://api.navitia.io
