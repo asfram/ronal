@@ -33,7 +33,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def data_update_response():
-    data_update_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    data_update = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
@@ -41,12 +41,12 @@ def data_update_response():
             <result>-1</result>
             <ActionId>1607281547155684</ActionId>
         </serverfusio>"""
-    return data_update_response
+    return data_update
 
 
 @pytest.fixture(scope="module")
 def regional_import_response():
-    regional_import_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    regional_import = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
@@ -54,12 +54,12 @@ def regional_import_response():
             <result>-1</result>
             <ActionId>1607281557392012</ActionId>
         </serverfusio>"""
-    return regional_import_response
+    return regional_import
 
 
 @pytest.fixture(scope="module")
 def set_to_preproduction_response():
-    set_to_preproduction_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    set_to_preproduction = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
@@ -67,12 +67,12 @@ def set_to_preproduction_response():
             <result>-1</result>
             <ActionId>1607281600236970</ActionId>
         </serverfusio>"""
-    return set_to_preproduction_response
+    return set_to_preproduction
 
 
 @pytest.fixture(scope="module")
 def set_to_production_response():
-    set_to_production_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    set_to_production = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
@@ -80,12 +80,12 @@ def set_to_production_response():
             <result>-1</result>
             <ActionId>1607281601141652</ActionId>
         </serverfusio>"""
-    return set_to_production_response
+    return set_to_production
 
 
 @pytest.fixture(scope="module")
 def info_response():
-    info_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    info = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <Info title="Information sur projet régional">
             <ActionList ActionCount="4" TerminatedCount="1" WaitingCount="2" AbortedCount="0" WorkingCount="1" \
             ThreadSuspended="False">
@@ -133,14 +133,15 @@ def info_response():
                 </Action>
             </ActionList>
         </Info>"""
-    return info_response
+    return info
+
 
 @pytest.fixture(scope="module")
 def fusio_after_crash_response():
-    fusio_after_crash_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+    fusio_after_crash = """<?xml version="1.0" encoding="ISO-8859-1"?>
         <Info title="Information sur projet régional">
             <ActionList ThreadSuspended="False" WorkingCount="0" AbortedCount="0" WaitingCount="0" \
             TerminatedCount="0" ActionCount="0"/>
         </Info>"""
-    return fusio_after_crash_response
+    return fusio_after_crash
 
