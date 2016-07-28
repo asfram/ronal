@@ -2,9 +2,15 @@ input_dir: .input
 stage:
   testing:
     name: sim
-    fusio: ftp://bob
+    input_ftp: ftp://bob/
+    fusio: http://bob/cgi-bin/fusio.dll/api?
     navitia: https://test.api.navitia.io
+    contributor_id: NAN
+    service_id: 3
   production:
     name: prod
-    fusio: ftp://bobette
+    input_ftp: ftp://bobette/
+    fusio: http://bobette/cgi-bin/fusio.dll/api?
     navitia: https://api.navitia.io
+    contributor_id: NAN
+    service_id: 3
