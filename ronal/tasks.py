@@ -34,13 +34,18 @@ from core import Handler
 
 
 def get_files(input_dir):
-    raise NotImplementedError
+    if not os.path.isdir(input_dir):
+        raise Exception('config input directory {} does not exist, cannot do anything'.format(input_dir))
 
+    files = [os.path.join(input_dir, filename) for filename in os.listdir(input_dir)]
+
+    return files
 
 def handle_data(config):
     logging.debug('config {}'.format(config))
 
-    files = get_files(config.get('input_dir'))
+    input_dir = config.get('input_dir')
+    files = get_files(input_dir)
 
     if not files:
         return
@@ -57,7 +62,6 @@ def load_config(config_file):
     import yaml
     with open(config_file, 'r') as f:
         return yaml.load(f)
-
 
 @clingon.clize
 def update_data_task(config_file='default_settings.yml'):

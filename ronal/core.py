@@ -27,7 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
-
+import os
+import shutil
 
 class Handler(object):
     def __init__(self, config):
@@ -44,7 +45,16 @@ class Handler(object):
         """
         backup file to file system (without history for the moment)
         """
-        pass
+        output_dir = self.config.get('output_dir')
+        self.create_dir(output_dir)
+
+        for filename in files:
+            shutil.move(filename, self.config.get('output_dir'))
+
+    def create_dir(self, directory):
+        """create directory if needed"""
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     def is_important_data_modification(self, files):
         """
