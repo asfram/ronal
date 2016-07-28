@@ -132,7 +132,15 @@ def info_response():
                     <ActionProgression Status="Waiting" Description="" StepCount="0" CurrentStep="0"/>
                 </Action>
             </ActionList>
-        </Info>        """
+        </Info>"""
     return info_response
 
+@pytest.fixture(scope="module")
+def fusio_after_crash_response():
+    fusio_after_crash_response = """<?xml version="1.0" encoding="ISO-8859-1"?>
+        <Info title="Information sur projet régional">
+            <ActionList ThreadSuspended="False" WorkingCount="0" AbortedCount="0" WaitingCount="0" \
+            TerminatedCount="0" ActionCount="0"/>
+        </Info>"""
+    return fusio_after_crash_response
 
