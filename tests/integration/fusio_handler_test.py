@@ -29,8 +29,10 @@
 # www.navitia.io
 
 import pytest
+import shutil
 from ronal import fusio_handler
-from io import StringIO, BytesIO
+from io import StringIO
+
 
 @pytest.fixture(scope="module")
 def data_update():
@@ -153,3 +155,17 @@ def test_get_action_id(data_update, regional_import, preproduction, production, 
     assert fusio_handler.get_action_id(preproduction) == '1607281600236970'
     assert fusio_handler.get_action_id(production) == '1607281601141652'
     assert fusio_handler.get_action_id(no_action) is None
+
+
+def test_get_action_status():
+    # dataupdate
+    file = info()
+    assert fusio_handler.get_action_status(file, '1607281547155684') == 'Terminated'
+    file = info()
+    assert fusio_handler.get_action_status(file, '1607281557392012') == 'Working'
+    file = info()
+    assert fusio_handler.get_action_status(file, '1607281600236970') == 'Waiting'
+    file = info()
+    assert fusio_handler.get_action_status(file, '1607281601141652') == 'Waiting'
+    file = info()
+    assert fusio_handler.get_action_status(file, '0123456789') is None

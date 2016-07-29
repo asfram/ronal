@@ -38,6 +38,18 @@ def get_action_id(xml_stream):
         return None
     return node[0].firstChild.nodeValue
 
+
+def get_action_status(xml_stream, action_id):
+    dom = xml.dom.minidom.parse(xml_stream)
+    action_node = [node for node in dom.getElementsByTagName("Action") if node.getAttribute("ActionId") == action_id]
+    if not action_node:
+        return None
+    action_progress = [node for node in action_node[0].childNodes if node.nodeName == 'ActionProgression']
+    if not action_progress:
+        return None
+    return action_progress[0].getAttribute("Status")
+
+
 class FusioHandler(object):
     def __init__(self, config):
         self.config = config
@@ -64,6 +76,6 @@ class FusioHandler(object):
         pass
 
     # http://bob/cgi-bin/fusio.dll/info
-    def get_status(self, action_id):
+    def get_status(self):
         pass
 
