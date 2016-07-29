@@ -29,6 +29,7 @@
 import logging
 import os
 import shutil
+import requests
 
 class Handler(object):
     def __init__(self, config):
@@ -49,7 +50,7 @@ class Handler(object):
         self.create_dir(output_dir)
 
         for filename in files:
-            shutil.move(filename, self.config.get('output_dir'))
+            shutil.move(filename, output_dir)
 
     def create_dir(self, directory):
         """create directory if needed"""
@@ -62,21 +63,48 @@ class Handler(object):
         """
         return True
 
-    def get_last_dataset_production_date(self, stage):
+    def get_last_dataset_production_date(self, datasets):
         """
-        fetch from navitia the last dataset production period
+        fetch from a navitia contibutor datasets the production period
         """
-        raise NotImplementedError
+        start_validation_date = datasets.get('datasets')[0].get('start_validation_date')
+        end_validation_date = datasets.get('datasets')[0].get('end_validation_date')
+        last_production_date = {'start_validation_date': start_validation_date , 'end_validation_date': end_validation_date}
+        return last_production_date
 
     def get_stage(self, important_modification):
         if important_modification:
             return self.config.get('stage', {}).get('testing')
         return self.config.get('stage', {}).get('production')
 
+    def call(self, url, auth=()):
+        try:
+            response = requests.get(url, auth=auth)
+        except requests.exceptions.ConnectionError:
+            logging.exception('error connecting: url {}'.format(url))
+            return
+        except requests.RequestException :
+            logging.exception('error fetching from navitia the last dataset production period')
+            return
+        else:
+            if response.status_code == 200:
+                return response
+            else:
+                logging.error('error fetching from navitia the last dataset production period: status code {}'.format(response.status_code))
+                return
+
     def route_to_stage(self, important_modification):
         stage = self.get_stage(important_modification)
         logging.info('routing to {}'.format(stage))
 
-        last_production_date = self.get_last_dataset_production_date(stage)
-
+        """
+        fetch from navitia the last datasets production period of a given contributor
+        """
+        navitia_parameters = stage.get('navitia')
+        coverage = self.config.get('coverage')
+        contributor = self.config.get('contributor')
+        navitia_url = navitia_parameters.get('url') + '/v1/coverage/' + coverage + '/contributors/' + contributor + '/datasets'
+        navitia_url_auth = (navitia_parameters.get('token'),'')
+        navitia_response = self.call(navitia_url, navitia_url_auth)
+        last_production_date = self.get_last_dataset_production_date(navitia_response.json())
         # TODO :)
