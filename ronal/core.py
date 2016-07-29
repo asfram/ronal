@@ -29,6 +29,46 @@
 import logging
 import os
 import shutil
+import requests
+
+
+def call_navitia(url, auth=()):
+    try:
+        response = requests.get(url, auth=auth)
+    except requests.exceptions.ConnectionError:
+        logging.exception('error connecting: url {}'.format(url))
+        return None
+    except requests.RequestException:
+        logging.exception('error fetching from navitia the last dataset production period')
+        return None
+    else:
+        if response.status_code == 200:
+            return response
+        else:
+            logging.error('error fetching from navitia the last dataset production period: status code {}'.format(
+                response.status_code))
+            return None
+
+
+def create_dir(directory):
+    """create directory if needed"""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def _create_production_period(datasets):
+    dataset = next(iter(datasets.get('datasets', [])), None)
+    if dataset:
+        start_validation_date = dataset.get('start_validation_date')
+        end_validation_date = dataset.get('end_validation_date')
+        return ProductionPeriod(start_validation_date, end_validation_date)
+    raise Exception('error fetching from navitia the last dataset production period: no datasets')
+
+
+class ProductionPeriod(object):
+    def __init__(self, start_validation_date, end_validation_date):
+        self.start_validation_date = start_validation_date
+        self.end_validation_date = end_validation_date
 
 
 class Handler(object):
@@ -47,15 +87,11 @@ class Handler(object):
         backup file to file system (without history for the moment)
         """
         output_dir = self.config.get('output_dir')
-        self.create_dir(output_dir)
+        create_dir(output_dir)
 
         for filename in files:
-            shutil.move(filename, self.config.get('output_dir'))
+            shutil.move(filename, output_dir)
 
-    def create_dir(self, directory):
-        """create directory if needed"""
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
     def is_important_data_modification(self, files):
         """
@@ -65,9 +101,16 @@ class Handler(object):
 
     def get_last_dataset_production_date(self, stage):
         """
-        fetch from navitia the last dataset production period
+        fetch from a navitia contibutor datasets the production period
         """
-        raise NotImplementedError
+        navitia_parameters = stage['navitia']
+        coverage = self.config['coverage']
+        contributor_id = self.config.get('contributor_id')
+        navitia_url = '{base_url}/v1/coverage/{coverage}/contributors/{contrib}/datasets'.format(base_url=navitia_parameters.get('url'), coverage=coverage, contrib=contributor_id)
+        navitia_url_auth = (navitia_parameters.get('token'),'')
+        navitia_response = call_navitia(navitia_url, navitia_url_auth)
+
+        return _create_production_period(navitia_response.json())
 
     def get_stage(self, important_modification):
         if important_modification:
@@ -78,6 +121,6 @@ class Handler(object):
         stage = self.get_stage(important_modification)
         logging.info('routing to {}'.format(stage))
 
+        # fetch from navitia the last datasets production period of a given contributor
         last_production_date = self.get_last_dataset_production_date(stage)
-
         # TODO :)
