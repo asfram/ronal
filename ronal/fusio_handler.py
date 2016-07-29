@@ -28,6 +28,15 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import xml.dom.minidom
+
+
+def get_action_id(xml_stream):
+    dom = xml.dom.minidom.parse(xml_stream)
+    node = dom.getElementsByTagName("ActionId")
+    if len(node) is 0:
+        return None
+    return node[0].firstChild.nodeValue
 
 class FusioHandler(object):
     def __init__(self, config):
