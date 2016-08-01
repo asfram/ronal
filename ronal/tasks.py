@@ -41,6 +41,7 @@ def get_files(input_dir):
 
     return files
 
+
 def handle_data(config):
     logging.debug('config {}'.format(config))
 
@@ -63,6 +64,7 @@ def load_config(config_file):
     with open(config_file, 'r') as f:
         return yaml.load(f)
 
+
 @clingon.clize
 def update_data_task(config_file='default_settings.yml'):
     try:
@@ -70,6 +72,12 @@ def update_data_task(config_file='default_settings.yml'):
         logging.getLogger(__name__).debug('update_data_task')
 
         config = load_config(config_file)
+        #once the config is loaded, we init again the logger
+        log_config = config.get('loggers')
+        if log_config:
+            from logging import config as logging_config
+            logging_config.dictConfig(log_config)
+
         handle_data(config)
     except:
         logging.exception('')
