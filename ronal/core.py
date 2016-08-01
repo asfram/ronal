@@ -30,6 +30,7 @@ import logging
 import os
 import shutil
 
+
 class Handler(object):
     def __init__(self, config):
         self.config = config
