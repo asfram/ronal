@@ -8,8 +8,8 @@ stage:
     input_ftp: ftp://bob/
     fusio: http://bob/cgi-bin/fusio.dll/api?
     navitia:
-        url: url 
-        token: token 
+        url: url #add url navitia
+        token: token #add token for navitia
     service_id: 3
   production:
     name: prod
@@ -19,6 +19,11 @@ stage:
         url: url 
         token: token 
     service_id: 3
+ihm:
+  fusio: http://fusio-ihm.fr-pdl-priv.dev.canaltp.fr/
+  action: dataupdate
+  contributor_id: 5
+  service_id: 1
 
 loggers:
   version: 1

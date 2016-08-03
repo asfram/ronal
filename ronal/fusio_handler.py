@@ -30,7 +30,8 @@
 
 import xml.dom.minidom
 import requests
-
+#from ronal.core import ProductionPeriod
+import logging
 
 def get_action_id(xml_stream):
     dom = xml.dom.minidom.parse(xml_stream)
@@ -51,9 +52,9 @@ def get_action_status(xml_stream, action_id):
     return action_progress[0].getAttribute("Status")
 
 
-def to_fusio_date(end_validation_date):
+def to_fusio_date(datetime):
     """Convert a python date to fusio format: mm/dd/yyyy"""
-    raise NotImplementedError
+    return datetime.strftime('%m/%d/%Y')
 
 
 class FusioHandler(object):
@@ -67,17 +68,35 @@ class FusioHandler(object):
     def _call_fusio_api(self, **kwargs):
         requests.post(self.stage['fusio_api'], **kwargs)
 
+    def _call_fusio_ihm(self,url,payload):
+        try:
+            response = requests.post(url,data=payload)
+        except requests.exceptions.ConnectionError:
+            logging.exception('error connecting: url {}'.format(url))
+            return None
+        except requests.RequestException:
+            logging.exception('error sending data from fusio')
+            return None
+        else:
+            if response.status_code == 200:
+                return response
+            else:
+                logging.error('error sending from fusio: status code {}'.format(
+                    response.status_code))
+                return None
+
     def publish(self):
-        self._data_update()
+        self._data_update(self.config['ihm'])
 
-        self._regional_import()
+        #self._regional_import()
 
-        self._set_to_preproduction()
+        #self._set_to_preproduction()
 
-        if not self.stage.is_testing:
+        if not self.stage['is_testing']:
             self._set_to_production()
 
-    def _data_update(self):
+    def _data_update(self, ihm):
+
         """
         POST http://fusio_ihm/AR_UpdateData.php?dutype=update&CSP_IDE=5&serviceid=1
  + 'libelle service' (ronal_ + current dt ?)
@@ -86,7 +105,19 @@ class FusioHandler(object):
         files = {"file1": (zip_file_name, open(zip_dest_full_path, 'rb'), 'application/octet-stream')}
 
         """
-        pass
+
+        fusio_host = ihm['fusio']
+        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio = fusio_host)
+        payload = {'CSP_IDE':'{csp}', 'action':'{action}',' dutype': 'update',
+                   'serviceid':'{service_id}','MAX_FILE_SIZE':'2000000',
+                   'isadapted': '0', 'libelle': '{libelle}',
+                   'date_deb': '{start_date}&{end_date}'
+            .format(csp = ihm['contributor_id'], action= ihm['action'],
+                    service_id = ihm['service_id'],
+                    start_date = self.fusio_begin_date,
+                    end_date = self.fusio_end_date,
+                    libelle='unlibelle')}
+        return self._call_fusio_ihm(fusio_url, payload)
 
     # http://bob/cgi-bin/fusio.dll/api?\
     # API?action=regionalimport&DateDebut=01/06/2016&DateFin=31/08/2016

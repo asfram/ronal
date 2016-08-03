@@ -30,7 +30,7 @@
 import os
 from clingon import clingon
 import logging
-from core import Handler
+from ronal.core import Handler
 
 
 def get_files(input_dir):

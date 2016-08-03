@@ -68,9 +68,10 @@ def _create_production_period(datasets):
 
 class ProductionPeriod(object):
     def __init__(self, start_validation_date, end_validation_date):
-        # TODO: convert start_validation_date from string to python date
-        self.start_validation_date = start_validation_date
-        self.end_validation_date = end_validation_date
+        from datetime import datetime
+
+        self.start_validation_date = datetime.strptime(start_validation_date, '%Y%m%dT%H%M%S')
+        self.end_validation_date =  datetime.strptime(end_validation_date, '%Y%m%dT%H%M%S')
 
 
 class Handler(object):
@@ -117,10 +118,10 @@ class Handler(object):
     def get_stage(self, important_modification):
         if important_modification:
             stage = self.config.get('stage', {}).get('testing')
-            stage.is_testing = True
+            stage['is_testing'] = True
         else:
             stage = self.config.get('stage', {}).get('production')
-            stage.is_testing = False
+            stage['is_testing'] = False
         return stage
 
     def route_to_stage(self, important_modification):
@@ -129,6 +130,7 @@ class Handler(object):
 
         # fetch from navitia the last datasets production period of a given contributor
         last_production_date = self.get_last_dataset_production_date(stage)
+        logging.debug(last_production_date)
 
         fusio_handler = FusioHandler(self.config, stage, last_production_date)
 

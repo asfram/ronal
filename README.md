@@ -20,7 +20,7 @@ pip install -r requirements_dev.txt
 Temporary data routing service (waiting for tartare)
 
 to run it:
-    `./ronal/task.py`
+    `PYTHONPATH=. ./ronal/tasks.py`
     
 to get custom settings:
     `./ronal/task.py --config-file my_settings_file.yml`
