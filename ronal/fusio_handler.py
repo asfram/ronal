@@ -29,6 +29,7 @@
 # www.navitia.io
 
 import xml.dom.minidom
+import requests
 
 
 def get_action_id(xml_stream):
@@ -50,32 +51,61 @@ def get_action_status(xml_stream, action_id):
     return action_progress[0].getAttribute("Status")
 
 
-class FusioHandler(object):
-    def __init__(self, config):
-        self.config = config
+def to_fusio_date(end_validation_date):
+    """Convert a python date to fusio format: mm/dd/yyyy"""
+    raise NotImplementedError
 
-    # http://bob/cgi-bin/fusio.dll/api?\
-    # API?action=dataupdate&contributorid=5&dutype=update&serviceid=3&libelle=maj auto\
-    # &DateDebut=01/01/2016&DateFin=31/12/2016&filename=http://bob//receivedFile/maj_auto.zip
-    def data_update(self):
+
+class FusioHandler(object):
+    def __init__(self, config, stage, production_period):
+        self.config = config
+        self.stage = stage
+        self.fusio_begin_date = to_fusio_date(production_period.start_validation_date)
+        self.fusio_end_date = to_fusio_date(production_period.end_validation_date)
+        self.production_period = production_period
+
+    def _call_fusio_api(self, **kwargs):
+        requests.post(self.stage['fusio_api'], **kwargs)
+
+    def publish(self):
+        self._data_update()
+
+        self._regional_import()
+
+        self._set_to_preproduction()
+
+        if not self.stage.is_testing:
+            self._set_to_production()
+
+    def _data_update(self):
+        """
+        POST http://fusio_ihm/AR_UpdateData.php?dutype=update&CSP_IDE=5&serviceid=1
+ + 'libelle service' (ronal_ + current dt ?)
+
+        we post a file:
+        files = {"file1": (zip_file_name, open(zip_dest_full_path, 'rb'), 'application/octet-stream')}
+
+        """
         pass
 
     # http://bob/cgi-bin/fusio.dll/api?\
     # API?action=regionalimport&DateDebut=01/06/2016&DateFin=31/08/2016
-    def regional_import(self):
-        pass
+    def _regional_import(self):
+        self._call_fusio_api(action='regionalimport',
+                             DataDebut=self.fusio_begin_date,
+                             DateFin=self.fusio_end_date)
 
     # http://bob/cgi-bin/fusio.dll/api?\
     # API?action=settopreproduction
-    def set_to_preproduction(self):
+    def _set_to_preproduction(self):
         pass
 
     # http://bob/cgi-bin/fusio.dll/api?\
     # API?action=settoproduction
-    def set_to_production(self):
+    def _set_to_production(self):
         pass
 
     # http://bob/cgi-bin/fusio.dll/info
-    def get_status(self):
+    def _get_status(self):
         pass
 

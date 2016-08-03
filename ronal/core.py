@@ -30,6 +30,7 @@ import logging
 import os
 import shutil
 import requests
+from ronal.fusio_handler import FusioHandler
 
 
 def call_navitia(url, auth=()):
@@ -67,6 +68,7 @@ def _create_production_period(datasets):
 
 class ProductionPeriod(object):
     def __init__(self, start_validation_date, end_validation_date):
+        # TODO: convert start_validation_date from string to python date
         self.start_validation_date = start_validation_date
         self.end_validation_date = end_validation_date
 
@@ -92,7 +94,6 @@ class Handler(object):
         for filename in files:
             shutil.move(filename, output_dir)
 
-
     def is_important_data_modification(self, files):
         """
         return True is the data update is small enough to be put in production without a manual testing
@@ -105,17 +106,22 @@ class Handler(object):
         """
         navitia_parameters = stage['navitia']
         coverage = self.config['coverage']
-        contributor_id = self.config.get('contributor_id')
-        navitia_url = '{base_url}/v1/coverage/{coverage}/contributors/{contrib}/datasets'.format(base_url=navitia_parameters.get('url'), coverage=coverage, contrib=contributor_id)
-        navitia_url_auth = (navitia_parameters.get('token'),'')
+        contributor_id = self.config['contributor_id']
+        navitia_url = '{base_url}/v1/coverage/{coverage}/contributors/{contrib}/datasets'\
+            .format(base_url=navitia_parameters['url'], coverage=coverage, contrib=contributor_id)
+        navitia_url_auth = (navitia_parameters.get('token'), '')
         navitia_response = call_navitia(navitia_url, navitia_url_auth)
 
         return _create_production_period(navitia_response.json())
 
     def get_stage(self, important_modification):
         if important_modification:
-            return self.config.get('stage', {}).get('testing')
-        return self.config.get('stage', {}).get('production')
+            stage = self.config.get('stage', {}).get('testing')
+            stage.is_testing = True
+        else:
+            stage = self.config.get('stage', {}).get('production')
+            stage.is_testing = False
+        return stage
 
     def route_to_stage(self, important_modification):
         stage = self.get_stage(important_modification)
@@ -123,4 +129,7 @@ class Handler(object):
 
         # fetch from navitia the last datasets production period of a given contributor
         last_production_date = self.get_last_dataset_production_date(stage)
-        # TODO :)
+
+        fusio_handler = FusioHandler(self.config, stage, last_production_date)
+
+        fusio_handler.publish()
