@@ -1,0 +1,49 @@
+{
+    "disruptions":[
+        
+    ],
+    "pagination":{
+        "start_page":0,
+        "items_on_page":1,
+        "items_per_page":25,
+        "total_result":1
+    },
+    "datasets":[
+        {
+            "realtime_level":"base_schedule",
+            "description":"default dataset: NAN - Nantes Métropole (TAN)",
+            "system":"",
+            "start_validation_date":"20150114T010000",
+            "end_validation_date":"20150701T020000",
+            "contributor":{
+                "website":"",
+                "id":"NAN",
+                "license":"",
+                "name":"NAN - Nantes Métropole (TAN)"
+            },
+            "id":"default_dataset:NAN"
+        }
+        
+    ],
+    "links":[
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/contributors/{contributor.id}",
+            "type":"contributor",
+            "rel":"contributors",
+            "templated":true
+        },
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/datasets/{datasets.id}",
+            "type":"datasets",
+            "rel":"datasets",
+            "templated":true
+        },
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/contributors/NAN/datasets",
+            "type":"first",
+            "templated":false
+        }
+        
+    ]
+
+}

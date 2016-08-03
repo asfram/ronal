@@ -1,0 +1,32 @@
+{
+    "disruptions":[
+        
+    ],
+    "pagination":{
+        "start_page":0,
+        "items_on_page":1,
+        "items_per_page":25,
+        "total_result":1
+    },
+    "links":[
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/contributors/{contributor.id}",
+            "type":"contributor",
+            "rel":"contributors",
+            "templated":true
+        },
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/datasets/{datasets.id}",
+            "type":"datasets",
+            "rel":"datasets",
+            "templated":true
+        },
+        {
+            "href":"http://vippriv-jormsim-ws.mutu.prod.canaltp.prod/v1/coverage/fr-pdl/contributors/NAN/datasets",
+            "type":"first",
+            "templated":false
+        }
+        
+    ]
+
+}
