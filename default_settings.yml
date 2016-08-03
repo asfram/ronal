@@ -8,16 +8,16 @@ stage:
     input_ftp: ftp://bob/
     fusio: http://bob/cgi-bin/fusio.dll/api?
     navitia:
-        url: http://vippriv-jormsim-ws.mutu.prod.canaltp.prod
-        token: fd5c66c1-2b1d-407d-bd07-dfbb01e6aba7
+        url: url 
+        token: token 
     service_id: 3
   production:
     name: prod
     input_ftp: ftp://bobette/
     fusio: http://bobette/cgi-bin/fusio.dll/api?
     navitia:
-        url: http://vippriv-jorm-ws.mutu.prod.canaltp.prod
-        token: 06630be8-8584-402c-8b1c-d70985298652
+        url: url 
+        token: token 
     service_id: 3
 
 loggers:
