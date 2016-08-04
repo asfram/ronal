@@ -187,3 +187,4 @@ def test_get_action_id_and_status(info, no_action):
     }
 
     assert fusio_handler.get_action_id_and_status(info) == expected
+    assert fusio_handler.get_action_id_and_status(no_action) == {}
