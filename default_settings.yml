@@ -20,7 +20,7 @@ stage:
         token: token 
     service_id: 3
 ihm:
-  fusio: http://fusio-ihm.fr-pdl-priv.dev.canaltp.fr/
+  fusio: # fusio url
   action: dataupdate
   contributor_id: 5
   service_id: 1
