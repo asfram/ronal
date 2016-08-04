@@ -35,10 +35,10 @@ import os
 import xml.etree.cElementTree as ElementTree
 
 def _parse_xml(raw_xml):
-   try:
-    root = ElementTree.fromstring(raw_xml)
-   except ElementTree.ParseError as e:
-    raise Exception("invalid xml: {}".format(e.message))
+    try:
+        root = ElementTree.fromstring(raw_xml)
+    except ElementTree.ParseError as e:
+            raise Exception("invalid xml: {}".format(e.message))
 
     return root
 
