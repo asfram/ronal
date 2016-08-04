@@ -38,7 +38,7 @@ def _parse_xml(raw_xml):
     try:
         root = ElementTree.fromstring(raw_xml)
     except ElementTree.ParseError as e:
-            raise Exception("invalid xml: {}".format(e.message))
+        raise Exception("invalid xml: {}".format(e.message))
 
     return root
 
@@ -137,6 +137,7 @@ class FusioHandler(object):
     def _data_update(self, stage, backup_dir):
 
         files = [os.path.join(backup_dir, filename) for filename in os.listdir(backup_dir)]
+
         if len(files) != 1:
             logging.info('it must have a file')
             return None
