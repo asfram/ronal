@@ -28,47 +28,29 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import logging
-import xml.etree.cElementTree as ElementTree
+import xml.dom.minidom
 import requests
+import logging
+import os
 
 
-def _parse_xml(raw_xml):
-    try:
-        root = ElementTree.fromstring(raw_xml)
-    except ElementTree.ParseError as e:
-        raise Exception("invalid xml: {}".format(e.message))
-
-    return root
-
-
-def get_action_id_and_status(raw_xml):
-    """
-    Return a dictionary of ActionId and Status from the "info" api of Fusio
-    Example:
-    {
-        '1607281547155684': 'Terminated',
-        '1607281557392012': 'Working',
-        '1607281600236970': 'Waiting',
-        '1607281601141652': 'Waiting'
-    }
-    """
-    root = _parse_xml(raw_xml)
-
-    return {a.get('ActionId'): a.find('ActionProgression').get('Status') for a in root.iter('Action')}
+def get_action_id(xml_stream):
+    dom = xml.dom.minidom.parse(xml_stream)
+    node = dom.getElementsByTagName("ActionId")
+    if len(node) is 0:
+        return None
+    return node[0].firstChild.nodeValue
 
 
-def get_action_id(raw_xml):
-    root = _parse_xml(raw_xml)
-    action_id_element = root.find('ActionId')
-
-    return None if action_id_element is None else action_id_element.text
-
-
-def get_action_status(raw_xml, action_id):
-    dict_action_status = get_action_id_and_status(raw_xml)
-
-    return dict_action_status.get(action_id)
+def get_action_status(xml_stream, action_id):
+    dom = xml.dom.minidom.parse(xml_stream)
+    action_node = [node for node in dom.getElementsByTagName("Action") if node.getAttribute("ActionId") == action_id]
+    if not action_node:
+        return None
+    action_progress = [node for node in action_node[0].childNodes if node.nodeName == 'ActionProgression']
+    if not action_progress:
+        return None
+    return action_progress[0].getAttribute("Status")
 
 
 def to_fusio_date(datetime):
@@ -104,9 +86,10 @@ class FusioHandler(object):
         # we need to call fusio to get the status of this action
         # and retry until this action is finished (and raise an error if the action fail)
 
-    def _call_fusio_ihm(self, url, payload):
+    def _call_fusio_ihm(self, url, file, auth, **kwargs):
         try:
-            response = requests.post(url, data=payload)
+            logging.debug('request to fusio ihm with {}'.format(kwargs))
+            response = requests.post(url, data=kwargs, files=file, auth=auth)
         except requests.exceptions.ConnectionError:
             logging.exception('error connecting: url {}'.format(url))
             return None
@@ -122,40 +105,38 @@ class FusioHandler(object):
                 return None
 
     def publish(self):
-        self._data_update(self.config['ihm'])
+        self._data_update(self.config['fusio'], self.config['backup_dir'])
 
-        self._regional_import()
+        #self._regional_import()
 
-        self._set_to_preproduction()
+        #self._set_to_preproduction()
 
         if not self.stage['is_testing']:
             self._set_to_production()
-
         logging.info('data published')
 
-    def _data_update(self, ihm):
+    def _data_update(self, stage, backup_dir):
 
-        """
-        POST http://fusio_ihm/AR_UpdateData.php?dutype=update&CSP_IDE=5&serviceid=1
- + 'libelle service' (ronal_ + current dt ?)
+        files = [os.path.join(backup_dir, filename) for filename in os.listdir(backup_dir)]
+        if len(files) != 1:
+            logging.info('it must have a file')
+            return None
+        file_to_post = {files[0]: (backup_dir, open(files[0], 'rb'), 'application/octet-stream')}
 
-        we post a file:
-        files = {"file1": (zip_file_name, open(zip_dest_full_path, 'rb'), 'application/octet-stream')}
-
-        """
-
-        fusio_host = ihm['fusio']
-        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio = fusio_host)
-        payload = {'CSP_IDE':'{csp}', 'action':'{action}',' dutype': 'update',
-                   'serviceid':'{service_id}','MAX_FILE_SIZE':'2000000',
-                   'isadapted': '0', 'libelle': '{libelle}',
-                   'date_deb': '{start_date}&{end_date}'
-            .format(csp = ihm['contributor_id'], action= ihm['action'],
-                    service_id = ihm['service_id'],
-                    start_date = self.fusio_begin_date,
-                    end_date = self.fusio_end_date,
-                    libelle='unlibelle')}
-        return self._call_fusio_ihm(fusio_url, payload)
+        fusio_host = self.stage['fusio']['ihm_url']
+        fusio_auth = (self.stage['fusio']['ihm_login'],self.stage['fusio']['ihm_password'])
+        fusio_url = '{url_ihm_fusio}AR_Response.php?'.format(url_ihm_fusio=fusio_host)
+        start_date = self.fusio_begin_date
+        end_date = self.fusio_end_date
+        return self._call_fusio_ihm(fusio_url, file_to_post ,fusio_auth,
+                                    CSP_IDE=self.config['fusio']['contributor_id'],
+                                    action='dataupdate',
+                                    dutype='update',
+                                    serviceid=self.config['fusio']['service_id'],
+                                    MAX_FILE_SIZE='2000000',
+                                    libelle='unlibelle',
+                                    date_deb=start_date,
+                                    end_date=end_date)
 
     def _regional_import(self):
         self._call_fusio_api(api='/api',
@@ -170,3 +151,4 @@ class FusioHandler(object):
     def _set_to_production(self):
         logging.info('pushing the data to prod')
         self._call_fusio_api_and_wait('/api', action='settoproduction')
+

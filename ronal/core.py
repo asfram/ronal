@@ -51,10 +51,14 @@ def call_navitia(url, auth=()):
             return None
 
 
-def create_dir(directory):
+def purge_dir(directory):
     """create directory if needed"""
     if not os.path.exists(directory):
         os.makedirs(directory)
+    else:
+        files = [os.path.join(directory, filename) for filename in os.listdir(directory)]
+        for file in files:
+            os.remove(file)
 
 
 def _create_production_period(datasets):
@@ -89,11 +93,11 @@ class Handler(object):
         """
         backup file to file system (without history for the moment)
         """
-        output_dir = self.config.get('output_dir')
-        create_dir(output_dir)
+        backup_dir = self.config.get('backup_dir')
+        purge_dir(backup_dir)
 
         for filename in files:
-            shutil.move(filename, output_dir)
+            shutil.move(filename, backup_dir)
 
     def is_important_data_modification(self, files):
         """
