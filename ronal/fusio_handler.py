@@ -30,8 +30,17 @@
 
 import xml.dom.minidom
 import requests
-#from ronal.core import ProductionPeriod
 import logging
+
+
+def get_action_id_and_status(raw_xml):
+    return {
+        '1607281547155684': 'Terminated',
+        '1607281557392012': 'Working',
+        '1607281600236970': 'Waiting',
+        '1607281601141652': 'Waiting'
+    }
+
 
 def get_action_id(xml_stream):
     dom = xml.dom.minidom.parse(xml_stream)
@@ -68,9 +77,9 @@ class FusioHandler(object):
     def _call_fusio_api(self, **kwargs):
         requests.post(self.stage['fusio_api'], **kwargs)
 
-    def _call_fusio_ihm(self,url,payload):
+    def _call_fusio_ihm(self, url, payload):
         try:
-            response = requests.post(url,data=payload)
+            response = requests.post(url, data=payload)
         except requests.exceptions.ConnectionError:
             logging.exception('error connecting: url {}'.format(url))
             return None
@@ -88,9 +97,9 @@ class FusioHandler(object):
     def publish(self):
         self._data_update(self.config['ihm'])
 
-        #self._regional_import()
+        self._regional_import()
 
-        #self._set_to_preproduction()
+        self._set_to_preproduction()
 
         if not self.stage['is_testing']:
             self._set_to_production()
@@ -139,4 +148,3 @@ class FusioHandler(object):
     # http://bob/cgi-bin/fusio.dll/info
     def _get_status(self):
         pass
-
