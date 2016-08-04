@@ -43,12 +43,11 @@ def get_files(input_dir):
 
 
 def handle_data(config):
-    logging.debug('config {}'.format(config))
-
     input_dir = config.get('input_dir')
     files = get_files(input_dir)
 
     if not files:
+        logging.debug('no file in input dir, stopping here')
         return
 
     handler = Handler(config)
