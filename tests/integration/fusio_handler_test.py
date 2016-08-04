@@ -29,66 +29,60 @@
 # www.navitia.io
 
 import pytest
-import shutil
 from ronal import fusio_handler
-from io import StringIO
 
 
 @pytest.fixture(scope="module")
 def data_update():
-    data_update_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
             <sendaction>dataupdate</sendaction>
             <result>-1</result>
             <ActionId>1607281547155684</ActionId>
-        </serverfusio>""")
-    return data_update_response
+        </serverfusio>"""
 
 
 @pytest.fixture(scope="module")
 def regional_import():
-    regional_import_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
             <sendaction>regionalimport</sendaction>
             <result>-1</result>
             <ActionId>1607281557392012</ActionId>
-        </serverfusio>""")
-    return regional_import_response
+        </serverfusio>"""
 
 
 @pytest.fixture(scope="module")
 def preproduction():
-    set_to_preproduction_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
             <sendaction>settopreproduction</sendaction>
             <result>-1</result>
             <ActionId>1607281600236970</ActionId>
-        </serverfusio>""")
-    return set_to_preproduction_response
+        </serverfusio>"""
 
 
 @pytest.fixture(scope="module")
 def production():
-    set_to_production_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <serverfusio>
             <address/>
             <version>Version 1.10.85.200</version>
             <sendaction>settoproduction</sendaction>
             <result>-1</result>
             <ActionId>1607281601141652</ActionId>
-        </serverfusio>""")
-    return set_to_production_response
+        </serverfusio>"""
 
 
 @pytest.fixture(scope="module")
 def info():
-    info_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <Info title="Information sur projet régional">
             <ActionList ActionCount="4" TerminatedCount="1" WaitingCount="2" AbortedCount="0" WorkingCount="1" \
             ThreadSuspended="False">
@@ -135,18 +129,36 @@ def info():
                     <ActionProgression Status="Waiting" Description="" StepCount="0" CurrentStep="0"/>
                 </Action>
             </ActionList>
-        </Info>""")
-    return info_response
+        </Info>"""
+
+
+@pytest.fixture(scope="module")
+def invalid_xml():
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
+        <serverfusio>
+            <address/>
+            <version>Version 1.10.85.200</version>
+            <sendaction>settoproduction</sendaction>
+            <result>-1</result>
+            <ActionId>1607281601141652</ActionId>
+        """
 
 
 @pytest.fixture(scope="module")
 def no_action():
-    fusio_after_crash_response = StringIO("""<?xml version="1.0" encoding="ISO-8859-1"?>
+    return """<?xml version="1.0" encoding="ISO-8859-1"?>
         <Info title="Information sur projet régional">
             <ActionList ThreadSuspended="False" WorkingCount="0" AbortedCount="0" WaitingCount="0" \
             TerminatedCount="0" ActionCount="0"/>
-        </Info>""")
-    return fusio_after_crash_response
+        </Info>"""
+
+
+def test_parse_xml(info, invalid_xml):
+    from xml.etree.cElementTree import Element
+    assert isinstance(fusio_handler._parse_xml(info), Element)
+
+    with pytest.raises(Exception):
+        fusio_handler._parse_xml(invalid_xml)
 
 
 def test_get_action_id(data_update, regional_import, preproduction, production, no_action):
@@ -157,15 +169,21 @@ def test_get_action_id(data_update, regional_import, preproduction, production, 
     assert fusio_handler.get_action_id(no_action) is None
 
 
-def test_get_action_status():
+def test_get_action_status(info):
     # dataupdate
-    file = info()
-    assert fusio_handler.get_action_status(file, '1607281547155684') == 'Terminated'
-    file = info()
-    assert fusio_handler.get_action_status(file, '1607281557392012') == 'Working'
-    file = info()
-    assert fusio_handler.get_action_status(file, '1607281600236970') == 'Waiting'
-    file = info()
-    assert fusio_handler.get_action_status(file, '1607281601141652') == 'Waiting'
-    file = info()
-    assert fusio_handler.get_action_status(file, '0123456789') is None
+    assert fusio_handler.get_action_status(info, '1607281547155684') == 'Terminated'
+    assert fusio_handler.get_action_status(info, '1607281557392012') == 'Working'
+    assert fusio_handler.get_action_status(info, '1607281600236970') == 'Waiting'
+    assert fusio_handler.get_action_status(info, '1607281601141652') == 'Waiting'
+    assert fusio_handler.get_action_status(info, '0123456789') is None
+
+
+def test_get_action_id_and_status(info, no_action):
+    expected = {
+        '1607281547155684': 'Terminated',
+        '1607281557392012': 'Working',
+        '1607281600236970': 'Waiting',
+        '1607281601141652': 'Waiting'
+    }
+
+    assert fusio_handler.get_action_id_and_status(info) == expected

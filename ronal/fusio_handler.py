@@ -28,37 +28,47 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import xml.dom.minidom
-import requests
 import logging
+import xml.etree.cElementTree as ElementTree
+import requests
+
+
+def _parse_xml(raw_xml):
+    try:
+        root = ElementTree.fromstring(raw_xml)
+    except ElementTree.ParseError as e:
+        raise Exception("invalid xml: {}".format(e.message))
+
+    return root
 
 
 def get_action_id_and_status(raw_xml):
-    return {
+    """
+    Return a dictionary of ActionId and Status from the "info" api of Fusio
+    Example:
+    {
         '1607281547155684': 'Terminated',
         '1607281557392012': 'Working',
         '1607281600236970': 'Waiting',
         '1607281601141652': 'Waiting'
     }
+    """
+    root = _parse_xml(raw_xml)
+
+    return {a.get('ActionId'): a.find('ActionProgression').get('Status') for a in root.iter('Action')}
 
 
-def get_action_id(xml_stream):
-    dom = xml.dom.minidom.parse(xml_stream)
-    node = dom.getElementsByTagName("ActionId")
-    if len(node) is 0:
-        return None
-    return node[0].firstChild.nodeValue
+def get_action_id(raw_xml):
+    root = _parse_xml(raw_xml)
+    action_id_element = root.find('ActionId')
+
+    return None if action_id_element is None else action_id_element.text
 
 
-def get_action_status(xml_stream, action_id):
-    dom = xml.dom.minidom.parse(xml_stream)
-    action_node = [node for node in dom.getElementsByTagName("Action") if node.getAttribute("ActionId") == action_id]
-    if not action_node:
-        return None
-    action_progress = [node for node in action_node[0].childNodes if node.nodeName == 'ActionProgression']
-    if not action_progress:
-        return None
-    return action_progress[0].getAttribute("Status")
+def get_action_status(raw_xml, action_id):
+    dict_action_status = get_action_id_and_status(raw_xml)
+
+    return dict_action_status[action_id] if action_id in dict_action_status else None
 
 
 def to_fusio_date(datetime):
@@ -116,15 +126,15 @@ class FusioHandler(object):
         """
 
         fusio_host = ihm['fusio']
-        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio = fusio_host)
-        payload = {'CSP_IDE':'{csp}', 'action':'{action}',' dutype': 'update',
-                   'serviceid':'{service_id}','MAX_FILE_SIZE':'2000000',
+        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio=fusio_host)
+        payload = {'CSP_IDE': '{csp}', 'action': '{action}',' dutype': 'update',
+                   'serviceid': '{service_id}', 'MAX_FILE_SIZE': '2000000',
                    'isadapted': '0', 'libelle': '{libelle}',
                    'date_deb': '{start_date}&{end_date}'
-            .format(csp = ihm['contributor_id'], action= ihm['action'],
-                    service_id = ihm['service_id'],
-                    start_date = self.fusio_begin_date,
-                    end_date = self.fusio_end_date,
+            .format(csp=ihm['contributor_id'], action=ihm['action'],
+                    service_id=ihm['service_id'],
+                    start_date=self.fusio_begin_date,
+                    end_date=self.fusio_end_date,
                     libelle='unlibelle')}
         return self._call_fusio_ihm(fusio_url, payload)
 
