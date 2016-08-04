@@ -68,7 +68,7 @@ def get_action_id(raw_xml):
 def get_action_status(raw_xml, action_id):
     dict_action_status = get_action_id_and_status(raw_xml)
 
-    return dict_action_status[action_id] if action_id in dict_action_status else None
+    return dict_action_status.get(action_id)
 
 
 def to_fusio_date(datetime):
@@ -126,15 +126,15 @@ class FusioHandler(object):
         """
 
         fusio_host = ihm['fusio']
-        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio=fusio_host)
-        payload = {'CSP_IDE': '{csp}', 'action': '{action}',' dutype': 'update',
-                   'serviceid': '{service_id}', 'MAX_FILE_SIZE': '2000000',
+        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio = fusio_host)
+        payload = {'CSP_IDE':'{csp}', 'action':'{action}',' dutype': 'update',
+                   'serviceid':'{service_id}','MAX_FILE_SIZE':'2000000',
                    'isadapted': '0', 'libelle': '{libelle}',
                    'date_deb': '{start_date}&{end_date}'
-            .format(csp=ihm['contributor_id'], action=ihm['action'],
-                    service_id=ihm['service_id'],
-                    start_date=self.fusio_begin_date,
-                    end_date=self.fusio_end_date,
+            .format(csp = ihm['contributor_id'], action= ihm['action'],
+                    service_id = ihm['service_id'],
+                    start_date = self.fusio_begin_date,
+                    end_date = self.fusio_end_date,
                     libelle='unlibelle')}
         return self._call_fusio_ihm(fusio_url, payload)
 
