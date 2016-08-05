@@ -179,12 +179,30 @@ def test_get_action_status(info):
 
 
 def test_get_action_id_and_status(info, no_action):
-    expected = {
+    actions = {
         '1607281547155684': 'Terminated',
         '1607281557392012': 'Working',
         '1607281600236970': 'Waiting',
         '1607281601141652': 'Waiting'
     }
 
-    assert fusio_handler.get_action_id_and_status(info) == expected
+    assert fusio_handler.get_action_id_and_status(info) == actions
     assert fusio_handler.get_action_id_and_status(no_action) == {}
+
+
+def test_retry_if_all_actions_not_terminated():
+    actions = {
+        '1607281547155684': 'Terminated',
+        '1607281557392012': 'Working',
+        '1607281600236970': 'Waiting',
+        '1607281601141652': 'Waiting'
+    }
+    assert fusio_handler.retry_if_all_actions_not_terminated(actions)
+
+    actions = {
+        '1607281547155684': 'Terminated',
+        '1607281557392012': 'Terminated',
+        '1607281600236970': 'Terminated',
+        '1607281601141652': 'Terminated'
+    }
+    assert fusio_handler.retry_if_all_actions_not_terminated(actions) == False

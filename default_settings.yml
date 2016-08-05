@@ -6,26 +6,33 @@ stage:
   testing:
     name: sim
     input_ftp: ftp://bob/
-    fusio: http://bob/cgi-bin/fusio.dll/api?
+    fusio:
+       ihm_url: url #add fusio ihm url
+       ihm_login: login #add fusio ihm user login
+       ihm_password: password #add fusio ihm user password
+       dll: url #add fusio dll url
     navitia:
-        url: url
-        token: token
+        url: url #add fusio ihm url
+        token: token #add navitia token
     service_id: 3
   production:
     name: prod
     input_ftp: ftp://bobette/
-    fusio: http://bobette/cgi-bin/fusio.dll/api?
+    fusio:
+       ihm_url: url #add navitia url
+       ihm_login: login #add fusio ihm user login
+       ihm_password: password #add fusio ihm user password
+       dll: url #add fusio dll url
     navitia:
         url: url 
-        token: token 
+        token: token
+        dll_url: dll_url #add dll url navitia
     service_id: 3
+
 fusio:
-  ihm_url: url
-  ihm_login: login
-  ihm_password: pass
-  action: dataupdate
   contributor_id: 5
   service_id: 1
+
 
 loggers:
   version: 1
