@@ -84,8 +84,25 @@ class FusioHandler(object):
         self.fusio_end_date = to_fusio_date(production_period.end_validation_date)
         self.production_period = production_period
 
-    def _call_fusio_api(self, **kwargs):
-        requests.post(self.stage['fusio_api'], **kwargs)
+    def _fusio_url(self):
+        return '{}//cgi-bin/fusio.dll'.format(self.stage['fusio']['ihm_url'])
+
+    def _call_fusio_api(self, api, **kwargs):
+        rep = requests.get('{fusio}{api}'.format(fusio=self._fusio_url(), api=api),
+                            data=kwargs)
+
+        if rep.status_code != 200:
+            raise Exception('fusio query failed: {}'.format(rep))
+
+        logging.debug('reponse  {}'.format(rep.content))
+        return get_action_id(rep.content)
+
+    def _call_fusio_api_and_wait(self, api, **kwargs):
+        action = self._call_fusio_api(api, **kwargs)
+
+        # TODO fassi :)
+        # we need to call fusio to get the status of this action
+        # and retry until this action is finished (and raise an error if the action fail)
 
     def _call_fusio_ihm(self, url, payload):
         try:
@@ -114,6 +131,8 @@ class FusioHandler(object):
         if not self.stage['is_testing']:
             self._set_to_production()
 
+        logging.info('data published')
+
     def _data_update(self, ihm):
 
         """
@@ -138,23 +157,16 @@ class FusioHandler(object):
                     libelle='unlibelle')}
         return self._call_fusio_ihm(fusio_url, payload)
 
-    # http://bob/cgi-bin/fusio.dll/api?\
-    # API?action=regionalimport&DateDebut=01/06/2016&DateFin=31/08/2016
     def _regional_import(self):
-        self._call_fusio_api(action='regionalimport',
+        self._call_fusio_api(api='/api',
+                             action='regionalimport',
                              DataDebut=self.fusio_begin_date,
                              DateFin=self.fusio_end_date)
 
-    # http://bob/cgi-bin/fusio.dll/api?\
-    # API?action=settopreproduction
     def _set_to_preproduction(self):
-        pass
+        logging.info('pushing the data to preprod')
+        self._call_fusio_api_and_wait('/api', action='settopreproduction')
 
-    # http://bob/cgi-bin/fusio.dll/api?\
-    # API?action=settoproduction
     def _set_to_production(self):
-        pass
-
-    # http://bob/cgi-bin/fusio.dll/info
-    def _get_status(self):
-        pass
+        logging.info('pushing the data to prod')
+        self._call_fusio_api_and_wait('/api', action='settoproduction')
