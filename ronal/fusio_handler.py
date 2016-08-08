@@ -28,10 +28,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import logging
-import xml.etree.cElementTree as ElementTree
+import xml.dom.minidom
 import requests
-
+import logging
+import os
+import xml.etree.cElementTree as ElementTree
 
 def _parse_xml(raw_xml):
     try:
@@ -104,9 +105,10 @@ class FusioHandler(object):
         # we need to call fusio to get the status of this action
         # and retry until this action is finished (and raise an error if the action fail)
 
-    def _call_fusio_ihm(self, url, payload):
+    def _call_fusio_ihm(self, url, files):
         try:
-            response = requests.post(url, data=payload)
+            logging.debug('request to fusio ihm with {}'.format(url))
+            response = requests.post(url, files=files)
         except requests.exceptions.ConnectionError:
             logging.exception('error connecting: url {}'.format(url))
             return None
@@ -122,7 +124,7 @@ class FusioHandler(object):
                 return None
 
     def publish(self):
-        self._data_update(self.config['ihm'])
+        self._data_update(self.config['backup_dir'])
 
         self._regional_import()
 
@@ -130,32 +132,35 @@ class FusioHandler(object):
 
         if not self.stage['is_testing']:
             self._set_to_production()
-
         logging.info('data published')
 
-    def _data_update(self, ihm):
+    def _data_update(self, backup_dir):
 
-        """
-        POST http://fusio_ihm/AR_UpdateData.php?dutype=update&CSP_IDE=5&serviceid=1
- + 'libelle service' (ronal_ + current dt ?)
+        files = [os.path.join(backup_dir, filename) for filename in os.listdir(backup_dir)]
 
-        we post a file:
-        files = {"file1": (zip_file_name, open(zip_dest_full_path, 'rb'), 'application/octet-stream')}
+        if len(files) != 1:
+            logging.info('it must have a file')
+            return None
+        file_to_post = {'file1': (backup_dir, open(files[0], 'rb'), 'application/octet-stream')}
 
-        """
+        payload = {
+            'CSP_IDE': '{}'.format(self.config['fusio']['contributor_id']),
+            'action': 'dataupdate',
+            'dutype': 'update',
+            'serviceid': '{}'.format(self.config['fusio']['service_id']),
+            'MAX_FILE_SIZE': '2000000',
+            'isadapted': '0',
+            'libelle': '{}'.format('unlibelle'),
+            'date_deb': '{}'.format(self.fusio_begin_date),
+            'date_fin': '{}'.format(self.fusio_end_date),
+            'login': '{}'.format(self.stage['fusio']['ihm_login']),
+            'password': '{}'.format(self.stage['fusio']['ihm_password'])
+        }
+        import urllib
+        fusio_url = '{url_ihm_fusio}/AR_Response.php?{query}'.format(url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urllib.urlencode(payload))
 
-        fusio_host = ihm['fusio']
-        fusio_url = '{url_ihm_fusio}/AR_Response.php?'.format(url_ihm_fusio = fusio_host)
-        payload = {'CSP_IDE':'{csp}', 'action':'{action}',' dutype': 'update',
-                   'serviceid':'{service_id}','MAX_FILE_SIZE':'2000000',
-                   'isadapted': '0', 'libelle': '{libelle}',
-                   'date_deb': '{start_date}&{end_date}'
-            .format(csp = ihm['contributor_id'], action= ihm['action'],
-                    service_id = ihm['service_id'],
-                    start_date = self.fusio_begin_date,
-                    end_date = self.fusio_end_date,
-                    libelle='unlibelle')}
-        return self._call_fusio_ihm(fusio_url, payload)
+        return self._call_fusio_ihm(fusio_url, file_to_post)
+
 
     def _regional_import(self):
         self._call_fusio_api(api='/api',

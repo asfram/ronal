@@ -1,5 +1,5 @@
 input_dir: './input'
-output_dir: './output'
+backup_dir: './backup'
 coverage: fr-pdl
 contributor_id: NAN
 stage:
@@ -8,8 +8,8 @@ stage:
     input_ftp: ftp://bob/
     fusio: http://bob/cgi-bin/fusio.dll/api?
     navitia:
-        url: url #add url navitia
-        token: token #add token for navitia
+        url: url
+        token: token
     service_id: 3
   production:
     name: prod
@@ -19,8 +19,10 @@ stage:
         url: url 
         token: token 
     service_id: 3
-ihm:
-  fusio: # fusio url
+fusio:
+  ihm_url: url
+  ihm_login: login
+  ihm_password: pass
   action: dataupdate
   contributor_id: 5
   service_id: 1
