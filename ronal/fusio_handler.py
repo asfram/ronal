@@ -33,7 +33,6 @@ import requests
 import logging
 import os
 import xml.etree.cElementTree as ElementTree
-import urllib
 
 def _parse_xml(raw_xml):
     try:
@@ -157,7 +156,7 @@ class FusioHandler(object):
             'login': '{}'.format(self.stage['fusio']['ihm_login']),
             'password': '{}'.format(self.stage['fusio']['ihm_password'])
         }
-
+        import urllib
         fusio_url = '{url_ihm_fusio}/AR_Response.php?{query}'.format(url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urllib.urlencode(payload))
 
         return self._call_fusio_ihm(fusio_url, file_to_post)
