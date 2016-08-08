@@ -64,16 +64,6 @@ def get_action_id_and_status(raw_xml):
 
     return {a.get('ActionId'): a.find('ActionProgression').get('Status') for a in root.iter('Action')}
 
-@retry(retry_on_result=retry_if_all_actions_not_terminated)
-def wait_for_all_actions_terminated(self, **action_id_and_status):
-    """
-    Retry calling fusio info api and checking given actions status if they are not terminated
-    """
-    fusio_response = self._call_fusio_api('/info')
-    current_actions = get_action_id_and_status(fusio_response)
-
-    return {_id: status for _id, status in current_actions if _id in action_id_and_status}
-
 
 def get_action_id(raw_xml):
     root = _parse_xml(raw_xml)
@@ -208,13 +198,13 @@ class FusioHandler(object):
         }
 
         from urllib.parse import urlencode
-        fusio_url = '{url_ihm_fusio}/AR_Response.php?{query}'.format(url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urlencode(payload))
+        fusio_url = '{url_ihm_fusio}AR_Response.php?{query}'.format(url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urlencode(payload))
         self._call_fusio_ihm(fusio_url, file_to_post)
 
         fusio_response = self._call_fusio_api('/info')
         post_data_update_actions = get_action_id_and_status(fusio_response)
 
-        actions_to_check = {_id:status for _id, status in post_data_update_actions.items() if _id in (pre_data_update_actions).keys()}
+        actions_to_check = {_id:status for _id, status in post_data_update_actions.items() if _id not in pre_data_update_actions.keys()}
         self.wait_for_all_actions_terminated(actions_to_check)
 
 
