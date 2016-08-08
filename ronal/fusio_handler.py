@@ -31,7 +31,7 @@ import requests
 import logging
 import os
 import xml.etree.cElementTree as ElementTree
-from retrying import retry
+from retrying import retry, RetryError
 
 
 def _parse_xml(raw_xml):
@@ -45,7 +45,7 @@ def _parse_xml(raw_xml):
 def retry_if_all_actions_not_terminated(actions):
     status = actions.values()
     if any(s == 'Aborted' for s in status):
-        raise Exception('')
+        raise Exception('error ')
     return any(s != 'Terminated' for s in status)
 
 
@@ -92,7 +92,7 @@ class FusioHandler(object):
         self.production_period = production_period
 
 
-    @retry(retry_on_result=retry_if_all_actions_not_terminated)
+    @retry(retry_on_result=retry_if_all_actions_not_terminated, stop_max_delay=20000)
     def wait_for_all_actions_terminated(self, action_id_and_status):
         """
         Retry calling fusio info api and checking given actions status if they are not terminated
@@ -113,7 +113,6 @@ class FusioHandler(object):
         if rep.status_code != 200:
             raise Exception('fusio query failed: {}'.format(rep))
 
-        logging.debug('reponse  {}'.format(rep.content))
         return rep.content
 
     def _call_fusio_api_and_wait(self, api, **kwargs):
@@ -148,15 +147,16 @@ class FusioHandler(object):
 
 
     def publish(self):
-        self._data_update(self.config['backup_dir'])
-
-        self._regional_import()
-
-        self._set_to_preproduction()
-
-        if not self.stage['is_testing']:
-            self._set_to_production()
-        logging.info('data published')
+        try:
+            self._data_update(self.config['backup_dir'])
+            self._regional_import()
+            self._set_to_preproduction()
+            if not self.stage['is_testing']:
+                self._set_to_production()
+            logging.info('data published')
+        except Exception:
+            logging.exception('error publishing data on fusio')
+            return None
 
 
     def _data_update(self, backup_dir):
