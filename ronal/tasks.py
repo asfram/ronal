@@ -35,9 +35,11 @@ from ronal.core import Handler
 
 def get_files(input_dir):
     if not os.path.isdir(input_dir):
-        raise Exception('config input directory {} does not exist, cannot do anything'.format(input_dir))
+        raise Exception(
+            'config input directory {} does not exist, cannot do anything'.format(input_dir))
 
-    files = [os.path.join(input_dir, filename) for filename in os.listdir(input_dir)]
+    files = [os.path.join(input_dir, filename)
+             for filename in os.listdir(input_dir)]
 
     return files
 
@@ -57,7 +59,8 @@ def handle_data(config):
 
 def load_config(config_file):
     if not os.path.exists(config_file):
-        raise Exception('config file {} does not exist, cannot do anything'.format(config_file))
+        raise Exception(
+            'config file {} does not exist, cannot do anything'.format(config_file))
 
     import yaml
     with open(config_file, 'r') as f:
@@ -71,7 +74,7 @@ def update_data_task(config_file='default_settings.yml'):
         logging.getLogger(__name__).debug('update_data_task')
 
         config = load_config(config_file)
-        #once the config is loaded, we init again the logger
+        # once the config is loaded, we init again the logger
         log_config = config.get('loggers')
         if log_config:
             from logging import config as logging_config

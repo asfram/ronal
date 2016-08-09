@@ -171,10 +171,14 @@ def test_get_action_id(data_update, regional_import, preproduction, production, 
 
 def test_get_action_status(info):
     # dataupdate
-    assert fusio_handler.get_action_status(info, '1607281547155684') == 'Terminated'
-    assert fusio_handler.get_action_status(info, '1607281557392012') == 'Working'
-    assert fusio_handler.get_action_status(info, '1607281600236970') == 'Waiting'
-    assert fusio_handler.get_action_status(info, '1607281601141652') == 'Waiting'
+    assert fusio_handler.get_action_status(
+        info, '1607281547155684') == 'Terminated'
+    assert fusio_handler.get_action_status(
+        info, '1607281557392012') == 'Working'
+    assert fusio_handler.get_action_status(
+        info, '1607281600236970') == 'Waiting'
+    assert fusio_handler.get_action_status(
+        info, '1607281601141652') == 'Waiting'
     assert fusio_handler.get_action_status(info, '0123456789') is None
 
 
@@ -206,3 +210,12 @@ def test_retry_if_all_actions_not_terminated():
         '1607281601141652': 'Terminated'
     }
     assert fusio_handler.retry_if_all_actions_not_terminated(actions) == False
+
+    actions = {
+        '1607281547155684': 'Terminated',
+        '1607281557392012': 'Working',
+        '1607281600236970': 'Aborted',
+        '1607281601141652': 'Waiting'
+    }
+    with pytest.raises(Exception) as exception_info:
+        fusio_handler.retry_if_all_actions_not_terminated(actions)

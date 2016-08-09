@@ -40,7 +40,8 @@ def call_navitia(url, auth=()):
         logging.exception('error connecting: url {}'.format(url))
         return None
     except requests.RequestException:
-        logging.exception('error fetching from navitia the last dataset production period')
+        logging.exception(
+            'error fetching from navitia the last dataset production period')
         return None
     else:
         if response.status_code == 200:
@@ -56,7 +57,8 @@ def purge_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
     else:
-        files = [os.path.join(directory, filename) for filename in os.listdir(directory)]
+        files = [os.path.join(directory, filename)
+                 for filename in os.listdir(directory)]
         for file in files:
             os.remove(file)
 
@@ -67,18 +69,23 @@ def _create_production_period(datasets):
         start_validation_date = dataset.get('start_validation_date')
         end_validation_date = dataset.get('end_validation_date')
         return ProductionPeriod(start_validation_date, end_validation_date)
-    raise Exception('error fetching from navitia the last dataset production period: no datasets')
+    raise Exception(
+        'error fetching from navitia the last dataset production period: no datasets')
 
 
 class ProductionPeriod(object):
+
     def __init__(self, start_validation_date, end_validation_date):
         from datetime import datetime
 
-        self.start_validation_date = datetime.strptime(start_validation_date, '%Y%m%dT%H%M%S')
-        self.end_validation_date =  datetime.strptime(end_validation_date, '%Y%m%dT%H%M%S')
+        self.start_validation_date = datetime.strptime(
+            start_validation_date, '%Y%m%dT%H%M%S')
+        self.end_validation_date = datetime.strptime(
+            end_validation_date, '%Y%m%dT%H%M%S')
 
 
 class Handler(object):
+
     def __init__(self, config):
         self.config = config
 
@@ -132,7 +139,8 @@ class Handler(object):
         stage = self.get_stage(important_modification)
         logging.info('routing to {}'.format(stage))
 
-        # fetch from navitia the last datasets production period of a given contributor
+        # fetch from navitia the last datasets production period of a given
+        # contributor
         last_production_date = self.get_last_dataset_production_date(stage)
         logging.debug(last_production_date)
 

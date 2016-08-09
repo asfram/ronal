@@ -31,7 +31,7 @@ import requests
 import logging
 import os
 import xml.etree.cElementTree as ElementTree
-from retrying import retry, RetryError
+from retrying import retry
 
 
 def _parse_xml(raw_xml):
@@ -42,10 +42,11 @@ def _parse_xml(raw_xml):
 
     return root
 
+
 def retry_if_all_actions_not_terminated(actions):
     status = actions.values()
     if any(s == 'Aborted' for s in status):
-        raise Exception('error ')
+        raise Exception('error publishing data on fusio: action aborted')
     return any(s != 'Terminated' for s in status)
 
 
@@ -84,13 +85,15 @@ def to_fusio_date(datetime):
 
 
 class FusioHandler(object):
+
     def __init__(self, config, stage, production_period):
         self.config = config
         self.stage = stage
-        self.fusio_begin_date = to_fusio_date(production_period.start_validation_date)
-        self.fusio_end_date = to_fusio_date(production_period.end_validation_date)
+        self.fusio_begin_date = to_fusio_date(
+            production_period.start_validation_date)
+        self.fusio_end_date = to_fusio_date(
+            production_period.end_validation_date)
         self.production_period = production_period
-
 
     @retry(retry_on_result=retry_if_all_actions_not_terminated, stop_max_delay=20000)
     def wait_for_all_actions_terminated(self, action_id_and_status):
@@ -100,15 +103,14 @@ class FusioHandler(object):
         fusio_response = self._call_fusio_api('/info')
         current_actions = get_action_id_and_status(fusio_response)
 
-        return {_id:status for _id, status in current_actions.items() if _id in action_id_and_status.keys()}
-
+        return {_id: status for _id, status in current_actions.items() if _id in action_id_and_status.keys()}
 
     def _fusio_url(self):
         return '{}cgi-bin/fusio.dll'.format(self.stage['fusio']['ihm_url'])
 
     def _call_fusio_api(self, api, **kwargs):
         rep = requests.get('{fusio}{api}'.format(fusio=self._fusio_url(), api=api),
-                            data=kwargs)
+                           data=kwargs)
 
         if rep.status_code != 200:
             raise Exception('fusio query failed: {}'.format(rep))
@@ -116,16 +118,13 @@ class FusioHandler(object):
         return rep.content
 
     def _call_fusio_api_and_wait(self, api, **kwargs):
-        response = self._call_fusio_api(api, **kwargs)
-
         """
         we need to call fusio to get the status of this action
         and retry until this action is finished (and raise an error if the action fail)
         """
+        response = self._call_fusio_api(api, **kwargs)
         action_id = get_action_id(response)
-        action_status = get_action_status(response, action_id)
-        self.wait_for_all_actions_terminated({action_id: action_status})
-
+        self.wait_for_all_actions_terminated({action_id: 'None'})
 
     def _call_fusio_ihm(self, url, files):
         try:
@@ -145,43 +144,32 @@ class FusioHandler(object):
                     response.status_code))
                 return None
 
-
     def publish(self):
-        try:
-            self._data_update(self.config['backup_dir'])
-            self._regional_import()
-            self._set_to_preproduction()
-            if not self.stage['is_testing']:
-                self._set_to_production()
-            logging.info('data published')
-        except Exception:
-            logging.exception('error publishing data on fusio')
-            return None
-
+        self._data_update(self.config['backup_dir'])
+        self._regional_import()
+        self._set_to_preproduction()
+        if not self.stage['is_testing']:
+            self._set_to_production()
+        logging.info('data published')
 
     def _data_update(self, backup_dir):
         """
         Retrieve actions info list (id, status) before dataupdate action
         GET http://fusio_dll/info
-        """        
+        """
         fusio_response = self._call_fusio_api('/info')
         pre_data_update_actions = get_action_id_and_status(fusio_response)
 
-        """
-        POST http://fusio_ihm/AR_UpdateData.php?dutype=update&CSP_IDE=5&serviceid=1
- + 'libelle service' (ronal_ + current dt ?)
-
-        we post a file:
-        files = {"file1": (zip_file_name, open(zip_dest_full_path, 'rb'), 'application/octet-stream')}
-        """
         logging.info('updating the data')
 
-        files = [os.path.join(backup_dir, filename) for filename in os.listdir(backup_dir)]
+        files = [os.path.join(backup_dir, filename)
+                 for filename in os.listdir(backup_dir)]
 
         if len(files) != 1:
             logging.info('it must have a file')
             return None
-        file_to_post = {'file1': (backup_dir, open(files[0], 'rb'), 'application/octet-stream')}
+        file_to_post = {
+            'file1': (backup_dir, open(files[0], 'rb'), 'application/octet-stream')}
 
         payload = {
             'CSP_IDE': '{}'.format(self.config['fusio']['contributor_id']),
@@ -198,15 +186,16 @@ class FusioHandler(object):
         }
 
         from urllib.parse import urlencode
-        fusio_url = '{url_ihm_fusio}AR_Response.php?{query}'.format(url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urlencode(payload))
+        fusio_url = '{url_ihm_fusio}AR_Response.php?{query}'.format(
+            url_ihm_fusio=self.stage['fusio']['ihm_url'], query=urlencode(payload))
         self._call_fusio_ihm(fusio_url, file_to_post)
 
         fusio_response = self._call_fusio_api('/info')
         post_data_update_actions = get_action_id_and_status(fusio_response)
 
-        actions_to_check = {_id:status for _id, status in post_data_update_actions.items() if _id not in pre_data_update_actions.keys()}
+        actions_to_check = {_id: status for _id, status in post_data_update_actions.items(
+        ) if _id not in pre_data_update_actions.keys()}
         self.wait_for_all_actions_terminated(actions_to_check)
-
 
     def _regional_import(self):
         self._call_fusio_api(api='/api',
