@@ -103,7 +103,7 @@ class FusioHandler(object):
         fusio_response = self._call_fusio_api('/info')
         current_actions = get_action_id_and_status(fusio_response)
 
-        return {_id: status for _id, status in current_actions.items() if _id in action_id_and_status.keys()}
+        return {_id: status for _id, status in current_actions.items() if _id in action_id_and_status}
 
     def _fusio_url(self):
         return '{}cgi-bin/fusio.dll'.format(self.stage['fusio']['ihm_url'])
@@ -193,8 +193,7 @@ class FusioHandler(object):
         fusio_response = self._call_fusio_api('/info')
         post_data_update_actions = get_action_id_and_status(fusio_response)
 
-        actions_to_check = {_id: status for _id, status in post_data_update_actions.items(
-        ) if _id not in pre_data_update_actions.keys()}
+        actions_to_check = {_id: status for _id, status in post_data_update_actions.items() if _id not in pre_data_update_actions}
         self.wait_for_all_actions_terminated(actions_to_check)
 
     def _regional_import(self):

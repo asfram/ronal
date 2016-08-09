@@ -209,7 +209,7 @@ def test_retry_if_all_actions_not_terminated():
         '1607281600236970': 'Terminated',
         '1607281601141652': 'Terminated'
     }
-    assert fusio_handler.retry_if_all_actions_not_terminated(actions) == False
+    assert not fusio_handler.retry_if_all_actions_not_terminated(actions)
 
     actions = {
         '1607281547155684': 'Terminated',
