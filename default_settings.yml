@@ -26,7 +26,6 @@ stage:
     navitia:
         url: url 
         token: token
-        dll_url: dll_url #add dll url navitia
     service_id: 3
 
 fusio:
