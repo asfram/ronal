@@ -201,7 +201,8 @@ class FusioHandler(object):
         self.wait_for_all_actions_terminated(actions_to_check)
 
     def _regional_import(self):
-        self._call_fusio_api(api='/api',
+        logging.info('launching regionalimport api ')
+        self._call_fusio_api_and_wait(api='/api',
                              action='regionalimport',
                              DataDebut=self.fusio_begin_date,
                              DateFin=self.fusio_end_date)
