@@ -80,8 +80,8 @@ def get_action_status(raw_xml, action_id):
 
 
 def to_fusio_date(datetime):
-    """Convert a python date to fusio format: mm/dd/yyyy"""
-    return datetime.strftime('%m/%d/%Y')
+    """Convert a python date to fusio format: dd/mm/yyyy"""
+    return datetime.strftime('%d/%m/%Y')
 
 
 class FusioHandler(object):
@@ -206,7 +206,7 @@ class FusioHandler(object):
         logging.info('launching regionalimport api ')
         self._call_fusio_api_and_wait(api='/api',
                              action='regionalimport',
-                             DataDebut=self.fusio_begin_date,
+                             DateDebut=self.fusio_begin_date,
                              DateFin=self.fusio_end_date)
 
     def _set_to_preproduction(self):
