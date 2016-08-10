@@ -86,14 +86,17 @@ def to_fusio_date(datetime):
 
 class FusioHandler(object):
 
-    def __init__(self, config, stage, production_period):
+    def __init__(self, config, stage, dataset_period, publication_period):
         self.config = config
         self.stage = stage
-        self.fusio_begin_date = to_fusio_date(
-            production_period.start_validation_date)
-        self.fusio_end_date = to_fusio_date(
-            production_period.end_validation_date)
-        self.production_period = production_period
+        self.fusio_dataupdate_begin_date = to_fusio_date(
+            dataset_period.start_validation_date)
+        self.fusio_dataupdate_end_date = to_fusio_date(
+            dataset_period.end_validation_date)
+        self.fusio_import_begin_date = to_fusio_date(
+            publication_period.start_validation_date)
+        self.fusio_import_end_date = to_fusio_date(
+            publication_period.end_validation_date)
 
     @retry(retry_on_result=retry_if_all_actions_not_terminated,
            stop_max_delay=40000 * 60,
@@ -185,8 +188,8 @@ class FusioHandler(object):
             'MAX_FILE_SIZE': '2000000',
             'isadapted': '0',
             'libelle': '{}'.format('unlibelle'),
-            'date_deb': self.fusio_begin_date,
-            'date_fin': self.fusio_end_date,
+            'date_deb': self.fusio_dataupdate_begin_date,
+            'date_fin': self.fusio_dataupdate_end_date,
             'login': self.stage['fusio']['ihm_login'],
             'password': self.stage['fusio']['ihm_password']
         }
@@ -206,8 +209,8 @@ class FusioHandler(object):
         logging.info('launching regionalimport api ')
         self._call_fusio_api_and_wait(api='/api',
                              action='regionalimport',
-                             DateDebut=self.fusio_begin_date,
-                             DateFin=self.fusio_end_date)
+                             DateDebut=self.fusio_import_begin_date,
+                             DateFin=self.fusio_import_end_date)
 
     def _set_to_preproduction(self):
         logging.info('pushing the data to preprod')

@@ -63,7 +63,7 @@ def purge_dir(directory):
             os.remove(file)
 
 
-def _create_production_period(datasets):
+def _create_dataset_period(datasets):
     dataset = next(iter(datasets.get('datasets', [])), None)
     if dataset:
         start_validation_date = dataset.get('start_validation_date')
@@ -72,17 +72,29 @@ def _create_production_period(datasets):
     raise Exception(
         'error fetching from navitia the last dataset production period: no datasets')
 
+def _create_publication_period(navitia_response):
+    start_validation_date = navitia_response['status']['start_production_date']
+    end_validation_date = navitia_response['status']['end_production_date']
+    return ProductionPeriod(start_validation_date, end_validation_date)
 
 class ProductionPeriod(object):
 
     def __init__(self, start_validation_date, end_validation_date):
         from datetime import datetime
 
-        self.start_validation_date = datetime.strptime(
-            start_validation_date, '%Y%m%dT%H%M%S')
-        self.end_validation_date = datetime.strptime(
-            end_validation_date, '%Y%m%dT%H%M%S')
+        if len(start_validation_date)>8:
+            self.start_validation_date = datetime.strptime(
+                start_validation_date, '%Y%m%dT%H%M%S')
+        else:
+            self.start_validation_date = datetime.strptime(
+                start_validation_date, '%Y%m%d')
 
+        if len(start_validation_date)>8:
+            self.end_validation_date = datetime.strptime(
+                end_validation_date, '%Y%m%dT%H%M%S')
+        else:
+            self.end_validation_date = datetime.strptime(
+                end_validation_date, '%Y%m%d')
 
 class Handler(object):
 
@@ -123,16 +135,31 @@ class Handler(object):
         navitia_url_auth = (navitia_parameters.get('token'), '')
         navitia_response = call_navitia(navitia_url, navitia_url_auth)
 
-        return _create_production_period(navitia_response.json())
+        return _create_dataset_period(navitia_response.json())
+
+    def get_navitia_production_date(self, stage):
+        """
+        fetch from the navitia status the publication period of the global dataset
+        """
+        navitia_parameters = stage['navitia']
+        coverage = self.config['coverage']
+        navitia_url = '{base_url}/v1/coverage/{coverage}/status/'\
+            .format(base_url=navitia_parameters['url'], coverage=coverage)
+        navitia_url_auth = (navitia_parameters.get('token'), '')
+        navitia_response = call_navitia(navitia_url, navitia_url_auth)
+
+        return _create_publication_period(navitia_response.json())
 
     def route_to_stage(self, stage):
         logging.info('routing to {}'.format(stage))
 
         # fetch from navitia the last datasets production period of a given
         # contributor
-        last_production_date = self.get_last_dataset_production_date(stage)
-        logging.debug(last_production_date)
+        last_dataset_date = self.get_last_dataset_production_date(stage)
+        last_publication_date = self.get_navitia_production_date(stage)
+        logging.debug("dates used for the DataUpdate : " +str(last_dataset_date))
+        logging.debug("dates used for the Import : " +str(last_publication_date))
 
-        fusio_handler = FusioHandler(self.config, stage, last_production_date)
+        fusio_handler = FusioHandler(self.config, stage, last_dataset_date, last_publication_date)
 
         fusio_handler.publish()
