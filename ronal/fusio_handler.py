@@ -95,7 +95,9 @@ class FusioHandler(object):
             production_period.end_validation_date)
         self.production_period = production_period
 
-    @retry(retry_on_result=retry_if_all_actions_not_terminated, stop_max_delay=20000)
+    @retry(retry_on_result=retry_if_all_actions_not_terminated,
+           stop_max_delay=40000 * 60,
+           wait_fixed=1000)
     def wait_for_all_actions_terminated(self, action_id_and_status):
         """
         Retry calling fusio info api and checking given actions status if they are not terminated
