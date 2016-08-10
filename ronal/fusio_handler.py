@@ -80,8 +80,8 @@ def get_action_status(raw_xml, action_id):
 
 
 def to_fusio_date(datetime):
-    """Convert a python date to fusio format: mm/dd/yyyy"""
-    return datetime.strftime('%m/%d/%Y')
+    """Convert a python date to fusio format: dd/mm/yyyy"""
+    return datetime.strftime('%d/%m/%Y')
 
 
 class FusioHandler(object):
