@@ -182,7 +182,7 @@ class FusioHandler(object):
             'serviceid': self.config['fusio']['service_id'],
             'MAX_FILE_SIZE': '2000000',
             'isadapted': '0',
-            'libelle': '{}'.format('unlibelle'),
+            'libelle': '{}'.format('unlibelle_regional_import'),
             'date_deb': self.fusio_begin_date,
             'date_fin': self.fusio_end_date,
             'login': self.stage['fusio']['ihm_login'],
@@ -201,7 +201,8 @@ class FusioHandler(object):
         self.wait_for_all_actions_terminated(actions_to_check)
 
     def _regional_import(self):
-        self._call_fusio_api(api='/api',
+        logging.info('lauching regionalimport api ')
+        self._call_fusio_api_and_wait(api='/api',
                              action='regionalimport',
                              DataDebut=self.fusio_begin_date,
                              DateFin=self.fusio_end_date)
