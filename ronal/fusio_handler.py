@@ -182,7 +182,7 @@ class FusioHandler(object):
             'serviceid': self.config['fusio']['service_id'],
             'MAX_FILE_SIZE': '2000000',
             'isadapted': '0',
-            'libelle': '{}'.format('unlibelle_regional_import'),
+            'libelle': '{}'.format('unlibelle'),
             'date_deb': self.fusio_begin_date,
             'date_fin': self.fusio_end_date,
             'login': self.stage['fusio']['ihm_login'],
