@@ -170,20 +170,23 @@ class FusioHandler(object):
         if len(files) != 1:
             logging.info('it must have a file')
             return None
-        file_to_post = {'database.zip': open(files[0], 'rb')}
+
+        file_to_post = {
+            'file1': (files[0], open(files[0], 'rb'), 'application/octet-stream')
+        }
 
         payload = {
-            'CSP_IDE': '{}'.format(self.config['fusio']['contributor_id']),
+            'CSP_IDE': self.config['fusio']['contributor_id'],
             'action': 'dataupdate',
             'dutype': 'update',
-            'serviceid': '{}'.format(self.config['fusio']['service_id']),
+            'serviceid': self.config['fusio']['service_id'],
             'MAX_FILE_SIZE': '2000000',
             'isadapted': '0',
             'libelle': '{}'.format('unlibelle'),
-            'date_deb': '{}'.format(self.fusio_begin_date),
-            'date_fin': '{}'.format(self.fusio_end_date),
-            'login': '{}'.format(self.stage['fusio']['ihm_login']),
-            'password': '{}'.format(self.stage['fusio']['ihm_password'])
+            'date_deb': self.fusio_begin_date,
+            'date_fin': self.fusio_end_date,
+            'login': self.stage['fusio']['ihm_login'],
+            'password': self.stage['fusio']['ihm_password']
         }
 
         from urllib.parse import urlencode
