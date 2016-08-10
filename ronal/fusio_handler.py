@@ -150,8 +150,10 @@ class FusioHandler(object):
         self._data_update(self.config['backup_dir'])
         self._regional_import()
         self._set_to_preproduction()
-        if not self.stage['is_testing']:
+        if self.stage['fusio']['update_production']:
             self._set_to_production()
+        else:
+            logging.info('production navitia is not updated for this stage')
         logging.info('data published')
 
     def _data_update(self, backup_dir):

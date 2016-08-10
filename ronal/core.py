@@ -91,10 +91,9 @@ class Handler(object):
 
     def route_data(self, files):
         self.backup_files(files)
-
-        important_modification = self.is_important_data_modification(files)
-
-        self.route_to_stage(important_modification)
+        self.route_to_stage(self.config.get('stage', {}).get('testing'))
+        if not self.is_important_data_modification(files) :
+            self.route_to_stage(self.config.get('stage', {}).get('production'))
 
     def backup_files(self, files):
         """
@@ -126,17 +125,7 @@ class Handler(object):
 
         return _create_production_period(navitia_response.json())
 
-    def get_stage(self, important_modification):
-        if important_modification:
-            stage = self.config.get('stage', {}).get('testing')
-            stage['is_testing'] = True
-        else:
-            stage = self.config.get('stage', {}).get('production')
-            stage['is_testing'] = False
-        return stage
-
-    def route_to_stage(self, important_modification):
-        stage = self.get_stage(important_modification)
+    def route_to_stage(self, stage):
         logging.info('routing to {}'.format(stage))
 
         # fetch from navitia the last datasets production period of a given

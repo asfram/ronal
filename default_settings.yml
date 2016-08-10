@@ -11,6 +11,7 @@ stage:
        ihm_login: login #add fusio ihm user login
        ihm_password: password #add fusio ihm user password
        dll: url #add fusio dll url
+       update_production: False
     navitia:
         url: url #add fusio ihm url
         token: token #add navitia token
@@ -23,8 +24,9 @@ stage:
        ihm_login: login #add fusio ihm user login
        ihm_password: password #add fusio ihm user password
        dll: url #add fusio dll url
+       update_production: False
     navitia:
-        url: url 
+        url: url
         token: token
     service_id: 3
 
