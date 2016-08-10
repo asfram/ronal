@@ -206,7 +206,7 @@ class FusioHandler(object):
         logging.info('launching regionalimport api ')
         self._call_fusio_api_and_wait(api='/api',
                              action='regionalimport',
-                             DataDebut=self.fusio_begin_date,
+                             DateDebut=self.fusio_begin_date,
                              DateFin=self.fusio_end_date)
 
     def _set_to_preproduction(self):
