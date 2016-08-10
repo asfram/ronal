@@ -170,8 +170,7 @@ class FusioHandler(object):
         if len(files) != 1:
             logging.info('it must have a file')
             return None
-        file_to_post = {
-            'file1': (backup_dir, open(files[0], 'rb'), 'application/octet-stream')}
+        file_to_post = {'database.zip': open(files[0], 'rb')}
 
         payload = {
             'CSP_IDE': '{}'.format(self.config['fusio']['contributor_id']),
