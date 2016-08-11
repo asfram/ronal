@@ -10,7 +10,6 @@ stage:
        ihm_url: url #add fusio ihm url
        ihm_login: login #add fusio ihm user login
        ihm_password: password #add fusio ihm user password
-       dll: url #add fusio dll url
        update_production: False
     navitia:
         url: url #add fusio ihm url
@@ -23,7 +22,6 @@ stage:
        ihm_url: url #add navitia url
        ihm_login: login #add fusio ihm user login
        ihm_password: password #add fusio ihm user password
-       dll: url #add fusio dll url
        update_production: False
     navitia:
         url: url
