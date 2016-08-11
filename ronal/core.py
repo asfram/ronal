@@ -157,9 +157,12 @@ class Handler(object):
         # contributor
         last_dataset_date = self.get_last_dataset_production_date(stage)
         last_publication_date = self.get_navitia_production_date(stage)
-        logging.debug("dates used for the DataUpdate : " +str(last_dataset_date))
-        logging.debug("dates used for the Import : " +str(last_publication_date))
-
+        logging.debug("dates used for the DataUpdate : {} - {}".format(
+            last_dataset_date.start_validation_date,
+            last_dataset_date.end_validation_date))
+        logging.debug("dates used for the Import : {} - {}".format(
+            last_publication_date.start_validation_date,
+            last_publication_date.end_validation_date))
         fusio_handler = FusioHandler(self.config, stage, last_dataset_date, last_publication_date)
 
         fusio_handler.publish()
