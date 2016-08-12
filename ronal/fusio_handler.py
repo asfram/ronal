@@ -132,22 +132,18 @@ class FusioHandler(object):
         self.wait_for_all_actions_terminated({action_id: 'None'})
 
     def _call_fusio_ihm(self, url, files):
-        try:
-            logging.debug('request to fusio ihm with {}'.format(url))
-            response = requests.post(url, files=files)
-        except requests.exceptions.ConnectionError:
-            logging.exception('error connecting: url {}'.format(url))
-            return None
-        except requests.RequestException:
-            logging.exception('error sending data from fusio')
-            return None
+        logging.debug('post request by fusio ihm with {}'.format(url))
+        response = requests.post(url, files=files)
+
+        if response.status_code == 302:
+            return response
+        elif response.status_code == 200:
+            raise Exception('error posting resquest to fusio: status code {}. Response status code must be 302.'.format(
+                response.status_code))
         else:
-            if response.status_code == 200:
-                return response
-            else:
-                logging.error('error sending from fusio: status code {}'.format(
-                    response.status_code))
-                return None
+            raise Exception('error posting resquest to fusio: status code {}.'.format(
+                response.status_code))
+
 
     def publish(self):
         self._data_update(self.config['backup_dir'])
